@@ -64,6 +64,7 @@
 
         .input-group {
             margin-bottom: 16px;
+            position: relative;
         }
 
         input {
@@ -164,6 +165,31 @@
             margin: 20px auto 0;
         }
 
+        .message {
+            margin-top: 10px;
+            font-size: clamp(12px, 2.5vw, 14px);
+            transition: all 0.3s ease;
+            height: 20px;
+        }
+
+        .success-message {
+            color: #4BB543;
+            font-weight: bold;
+        }
+
+        .error-message {
+            color: #ff3333;
+            font-weight: bold;
+        }
+
+        .signup-form, .login-form {
+            transition: all 0.5s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+
         /* Media Queries for different screen sizes */
         @media (max-width: 480px) {
             .login-card {
@@ -244,43 +270,155 @@
             </svg>
         </div>
         
-        <h1>Hi There!</h1>
-        
-        <div class="input-group">
-            <input type="email" placeholder="Email" required>
+        <div id="loginForm" class="login-form">
+            <h1>Hi There!</h1>
+            
+            <form id="loginFormElement">
+                <div class="input-group">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                </div>
+                
+                <div class="input-group password-field">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <button type="button" class="password-toggle">⦿</button>
+                </div>
+                
+                <button type="submit" class="sign-in-btn">Sign in</button>
+                
+                <button type="button" class="apple-signin-btn">
+                    <span class="apple-logo">⌘</span>
+                    Sign in with Apple
+                </button>
+                
+                <p class="signup-text">
+                    Don't have an account? <a href="#" id="showSignup" class="signup-link">sign up, it's free!</a>
+                </p>
+                
+                <div id="loginMessage" class="message"></div>
+            </form>
         </div>
         
-        <div class="input-group password-field">
-            <input type="password" placeholder="Password" required>
-            <button type="button" class="password-toggle">⦿</button>
+        <div id="signupForm" class="signup-form hidden">
+            <h1>Create Account</h1>
+            
+            <form id="signupFormElement">
+                <div class="input-group">
+                    <input type="text" id="signupName" placeholder="Full Name" required>
+                </div>
+                
+                <div class="input-group">
+                    <input type="email" id="signupEmail" placeholder="Email" required>
+                </div>
+                
+                <div class="input-group password-field">
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                    <button type="button" class="password-toggle">⦿</button>
+                </div>
+                
+                <button type="submit" class="sign-in-btn">Sign up</button>
+                
+                <p class="signup-text">
+                    Already have an account? <a href="#" id="showLogin" class="signup-link">login here</a>
+                </p>
+                
+                <div id="signupMessage" class="message"></div>
+            </form>
         </div>
-        
-        <button type="button" class="sign-in-btn">Sign in</button>
-        
-        <button type="button" class="apple-signin-btn">
-            <span class="apple-logo">⌘</span>
-            Sign in with Apple
-        </button>
-        
-        <p class="signup-text">
-            Don't have an account? <a href="#" class="signup-link">sign up, it's free!</a>
-        </p>
         
         <div class="indicator"></div>
     </div>
 
     <script>
+        // Simple user database (in memory for demo purposes)
+        let users = [
+            { email: 'demo@example.com', password: 'password123', name: 'Demo User' }
+        ];
+        
         // Toggle password visibility
-        document.querySelector('.password-toggle').addEventListener('click', function() {
-            const passwordInput = document.querySelector('input[type="password"]');
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const passwordInput = this.previousElementSibling;
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.textContent = '◉';
+                } else {
+                    passwordInput.type = 'password';
+                    this.textContent = '⦿';
+                }
+            });
+        });
+
+        // Toggle between login and signup forms
+        document.getElementById('showSignup').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.remove('hidden');
+        });
+        
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        });
+        
+        // Handle login form submission
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
             
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = '◉';
+            // Check if user exists
+            const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+            
+            if (user) {
+                messageDiv.textContent = `Welcome back, ${user.name}!`;
+                messageDiv.className = 'message success-message';
+                
+                // Simulate a redirect after successful login
+                setTimeout(() => {
+                    alert(`Login successful! Welcome ${user.name}`);
+                }, 1000);
             } else {
-                passwordInput.type = 'password';
-                this.textContent = '⦿';
+                messageDiv.textContent = 'Invalid email or password';
+                messageDiv.className = 'message error-message';
             }
+        });
+        
+        // Handle signup form submission
+        document.getElementById('signupFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const messageDiv = document.getElementById('signupMessage');
+            
+            // Check if email already exists
+            if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                messageDiv.textContent = 'Email already in use';
+                messageDiv.className = 'message error-message';
+                return;
+            }
+            
+            // Add new user
+            users.push({ email, password, name });
+            
+            messageDiv.textContent = 'Account created successfully!';
+            messageDiv.className = 'message success-message';
+            
+            // Switch to login form after successful signup
+            setTimeout(() => {
+                document.getElementById('signupForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('loginMessage').textContent = 'Account created! Please log in';
+                document.getElementById('loginMessage').className = 'message success-message';
+            }, 1500);
+        });
+        
+        // Apple sign in button
+        document.querySelector('.apple-signin-btn').addEventListener('click', function() {
+            alert('Apple Sign In would be implemented here with Apple Authentication API');
         });
 
         // Responsive animations
